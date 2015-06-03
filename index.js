@@ -1,6 +1,6 @@
 var fs = require('fs');
 if (!fs.existsSync('./api-credentials.js')){
-      console.log('Add your credentials to a coopy of api-credentials.js.default and rename to api-credentials.js');
+      console.log('Add your credentials to a copy of api-credentials.js.default and rename to api-credentials.js');
       process.exit()
   }
 
