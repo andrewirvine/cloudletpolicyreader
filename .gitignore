@@ -1,7 +1,8 @@
+#Credentials
+api-credentials.js
 # Logs
 logs
 *.log
-
 # Runtime data
 pids
 *.pid

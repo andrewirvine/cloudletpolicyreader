@@ -1,61 +1,87 @@
+var fs = require('fs');
+if (!fs.existsSync('./api-credentials.js')){
+      console.log('Add your credentials to a coopy of api-credentials.js.default and rename to api-credentials.js');
+      process.exit()
+  }
+
+var json2csv = require('json2csv');
 var EdgeGrid = require('edgegrid');
+var apicredentials = require('./api-credentials');
 
-    var client_token = "",
-      client_secret = "",
-      access_token = "",
-      base_uri = "https://akab-tdxdkscmzbtqpscc-4xanot7bmxg4rphu.luna.akamaiapis.net/";
+    
+    
+var client_token = apicredentials.config.client_token,
+client_secret = apicredentials.config.client_secret,
+access_token = apicredentials.config.access_token,
+base_uri = apicredentials.config.base_uri
  
+    
+var eg = new EdgeGrid(client_token, client_secret, access_token, base_uri);
+var request_body = {"policyManagerRequest":{"command":"getPolicyInfoMapUsingACGIDs","getPolicyInfoMapUsingACGIDs":{}}};
+eg.auth({
+  "path": "config-edgeredirector-data/api/v1/policymanager",
+  "method": "POST",
+  "headers": {},
+  "body": "query=" + encodeURIComponent(JSON.stringify(request_body))
+});
+eg.send(function (data, response) {
+  
+  response = JSON.parse(data);
+  getPolicyDetails(response.response);
+});
 
-    var eg = new EdgeGrid(client_token, client_secret, access_token, base_uri);
-    //var request_body = {"policyManagerRequest":{"command":"getPolicyInfoMapUsingACGIDs","getPolicyInfoMapUsingACGIDs":{}}};
-     var request_body = {"policyManagerRequest": {"command": "read","read": {"id": "19895"}}};
+
+
+function getPolicyDetails(policy_ids){
+  console.log('Number of policies:' + policy_ids.length);
+	for (var i = policy_ids.length -1; i >= 0; i--) {
+		var request_body = {"policyManagerRequest": {"command": "read","read": {"id": policy_ids[i].id }}};
     eg.auth({
-      "path": "config-edgeredirector-data/api/v1/policymanager?command=getAllPolicyInfoMaps ",
+      "path": "config-edgeredirector-data/api/v1/policymanager",
       "method": "POST",
       "headers": {},
       "body": "query=" + encodeURIComponent(JSON.stringify(request_body))
     });
     eg.send(function (data, response) {
+      data = JSON.parse(data);
+      var match_rules = data.response.matchRules;
       
-      response = JSON.parse(data).response;
-      update_pol(response);
-      //console.log(response);
+      var match_array = [];
+      for (var i = match_rules.length - 1; i >= 0; i--) {
+        for (var j = match_rules[i].matches.length - 1; j >= 0; j--) {
+          var flattened_rule = {};
+          flattened_rule.cloudlet_type = data.response.cloudletConfig.name;
+          flattened_rule.policy_name = data.response.policyName;
+          flattened_rule.version = data.response.version;
+          flattened_rule.description = data.response.description;          
+          flattened_rule.rule_group = i;
+          flattened_rule.matchValue = match_rules[i].matches[j].matchValue;
+          flattened_rule.caseSensitive = match_rules[i].matches[j].caseSensitive;
+          flattened_rule.matchOperator = match_rules[i].matches[j].matchOperator; 
+          flattened_rule.matchType = match_rules[i].matches[j].matchType;           
+          flattened_rule.redirectURL =  match_rules[i].redirectURL;
 
-      // for (var i = response.matchRules.length - 1; i >= 0; i--) {
-      //   console.log(JSON.stringify(response.matchRules[i].matches) + response.matchRules[i].redirectURL);
-      // };
-    });
-
-
-    // var request_body = {"policyManagerRequest":{"command":"getPolicyInfoMapUsingACGIDs","getPolicyInfoMapUsingACGIDs":{}}};
-    // eg.auth({
-    //   "path": "config-edgeredirector-data/api/v1/policymanager?command=getAllPolicyInfoMaps ",
-    //   "method": "POST",
-    //   "headers": {},
-    //   "body": "query=" + encodeURIComponent(JSON.stringify(request_body))
-    // });
-    // eg.send(function (data, response) {
-    //   response = JSON.parse(data).response;
-    //   for (var i = response.length - 1; i >= 0; i--) {
-    //     console.log(response[i].policyId + ' : ' + response[i].id + ' : '  + response[i].policyName);
-    //   };
-    // });
-
-function update_pol (policy_1){
- var request_body = {"policyManagerRequest":{"command":"update","update":{"overwriteRules":true,"id":19895,"policyId":3198,"createdBy":"andrew.irvine@burberry.com","createDate":1433243351082,"version":2,"immutable":false,"activatedProduction":0,"activatedStaging":0,"activatedTest":0,"description":"add first rule","policyName":"api_update_test","assetId":0,"cloudletId":0,"cloudletConfig":{"id":0,"key":"ER","name":"EDGEREDIRECTOR","featureKey":"edge_redirector","engProduct":"Cloudlets::Edge_Redirector","policyFileNamePrefix":"nimbus_","openAPIContextRoot":"/configure-edgeredirector-data","isInternal":true,"stagingLocation":"tapioca_staging_ump_files","productionLocation":"tapioca_ump_files","logsLocation":null},"policyGroupId":0,"policyDescription":"Policy to allow test of Edge Redirector API","policyCreatedBy":"andrew.irvine@burberry.com","policyLastModifiedBy":"andrew.irvine@burberry.com","policyCreateDate":1433243351082,"policyLastModifiedDate":1433243351082,"matchRules":[{"matchURL":"http://this.com","start":0,"end":0,"type":"erMatchRule","useIncomingQueryString":false,"redirectURL":"http://that2.com","statusCode":"302","id":null}],"saasRules":null}}};
- 
- eg.auth({
-      "path": "config-edgeredirector-data/api/v1/policymanager/?command=update",
-      "method": "POST",
-      "headers": {},
-      "body": "query=" + encodeURIComponent(JSON.stringify(request_body))
-    });
-    eg.send(function (data, response) {
-      response = JSON.parse(data).response;
-      console.log(data);
-      // for (var i = response.matchRules.length - 1; i >= 0; i--) {
-      //   console.log(JSON.stringify(response.matchRules[i].matches) + response.matchRules[i].redirectURL);
-      // };
-    });
+          match_array.push(flattened_rule);
+        }
+      }
+      export_file (data.response.policyName, match_array)
+  	});
+	};	
 }
 
+function export_file(file_name, match_array){
+
+  var export_dir = './exports';
+  if (!fs.existsSync(export_dir)){
+      fs.mkdirSync(export_dir);
+  }
+
+  var fields = ['cloudlet_type','policy_name','version','description','name','rule_group','caseSensitive','matchOperator','matchType','matchValue','redirectURL'];
+    json2csv({ data: match_array, fields: fields }, function(err, csv) {
+      if (err) console.log(err);
+        fs.writeFile(export_dir + '/' + file_name +'.csv', csv, function(err) {
+      if (err) throw err;
+        console.log('Writing file: ' + file_name);
+      });
+    });
+}
