@@ -25,9 +25,14 @@ eg.auth({
   "body": "query=" + encodeURIComponent(JSON.stringify(request_body))
 });
 eg.send(function (data, response) {
-  
-  response = JSON.parse(data);
-  getPolicyDetails(response.response);
+  data = JSON.parse(data);
+  if(data.responseCode === 0){
+    getPolicyDetails(data.response);
+  }
+  else{
+    console.log("Error reading policies : " + data.status + ':' + data.title);
+    console.log("Error Detail : " + data.detail);
+  }
 });
 
 
@@ -43,26 +48,34 @@ function getPolicyDetails(policy_ids){
       "body": "query=" + encodeURIComponent(JSON.stringify(request_body))
     });
     eg.send(function (data, response) {
-      data = JSON.parse(data);
-      var match_rules = data.response.matchRules;
-      
-      var match_array = [];
-      for (var i = match_rules.length - 1; i >= 0; i--) {
-        for (var j = match_rules[i].matches.length - 1; j >= 0; j--) {
-          var flattened_rule = {};
-          flattened_rule.cloudlet_type = data.response.cloudletConfig.name;
-          flattened_rule.policy_name = data.response.policyName;
-          flattened_rule.version = data.response.version;
-          flattened_rule.description = data.response.description;          
-          flattened_rule.rule_group = i;
-          flattened_rule.matchValue = match_rules[i].matches[j].matchValue;
-          flattened_rule.caseSensitive = match_rules[i].matches[j].caseSensitive;
-          flattened_rule.matchOperator = match_rules[i].matches[j].matchOperator; 
-          flattened_rule.matchType = match_rules[i].matches[j].matchType;           
-          flattened_rule.redirectURL =  match_rules[i].redirectURL;
 
-          match_array.push(flattened_rule);
+      data = JSON.parse(data);
+      if(data.responseCode === 0){
+        var match_rules = data.response.matchRules;
+        
+        var match_array = [];
+        for (var i = match_rules.length - 1; i >= 0; i--) {
+          for (var j = match_rules[i].matches.length - 1; j >= 0; j--) {
+            var flattened_rule = {};
+            flattened_rule.cloudlet_type = data.response.cloudletConfig.name;
+            flattened_rule.policy_name = data.response.policyName;
+            flattened_rule.version = data.response.version;
+            flattened_rule.description = data.response.description;          
+            flattened_rule.rule_group = i;
+            flattened_rule.matchValue = match_rules[i].matches[j].matchValue;
+            flattened_rule.caseSensitive = match_rules[i].matches[j].caseSensitive;
+            flattened_rule.matchOperator = match_rules[i].matches[j].matchOperator; 
+            flattened_rule.matchType = match_rules[i].matches[j].matchType;           
+            flattened_rule.redirectURL =  match_rules[i].redirectURL;
+
+            match_array.push(flattened_rule);
+          }
         }
+      }
+      else {
+        console.log('Error reading policy ' + policy_ids[i].id);
+        console.log("Error : " + data.status + ':' + data.title);
+        console.log("Error Detail" + data.detail);
       }
       export_file (data.response.policyName, match_array)
   	});
