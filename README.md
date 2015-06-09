@@ -1,4 +1,4 @@
-# edgeredtest
+# Akamai Cloudlet Policy Reader
 
 This reads all of the Cloudlet policies from Akamai and writes them to CSVs
 
