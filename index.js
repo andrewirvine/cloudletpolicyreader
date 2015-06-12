@@ -54,14 +54,14 @@ function getPolicyDetails(policy_ids){
         var match_rules = data.response.matchRules;
         
         var match_array = [];
-        for (var i = match_rules.length - 1; i >= 0; i--) {
-          for (var j = match_rules[i].matches.length - 1; j >= 0; j--) {
+        for (var i = 0; i < match_rules.length; i++) {
+          for (var j = 0; j < match_rules[i].matches.length; j++) {
             var flattened_rule = {};
             flattened_rule.cloudlet_type = data.response.cloudletConfig.name;
             flattened_rule.policy_name = data.response.policyName;
             flattened_rule.version = data.response.version;
             flattened_rule.description = data.response.description;          
-            flattened_rule.rule_group = i;
+            flattened_rule.rule_group = i + 1;
             flattened_rule.matchValue = match_rules[i].matches[j].matchValue;
             flattened_rule.caseSensitive = match_rules[i].matches[j].caseSensitive;
             flattened_rule.matchOperator = match_rules[i].matches[j].matchOperator; 
