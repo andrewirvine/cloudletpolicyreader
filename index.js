@@ -65,7 +65,8 @@ function getPolicyDetails(policy_ids){
             flattened_rule.matchValue = match_rules[i].matches[j].matchValue;
             flattened_rule.caseSensitive = match_rules[i].matches[j].caseSensitive;
             flattened_rule.matchOperator = match_rules[i].matches[j].matchOperator; 
-            flattened_rule.matchType = match_rules[i].matches[j].matchType;           
+            flattened_rule.matchType = match_rules[i].matches[j].matchType;
+            flattened_rule.negate =  match_rules[i].matches[j].negate;    
             flattened_rule.redirectURL =  match_rules[i].redirectURL;
 
             match_array.push(flattened_rule);
@@ -89,7 +90,7 @@ function export_file(file_name, match_array){
       fs.mkdirSync(export_dir);
   }
 
-  var fields = ['cloudlet_type','policy_name','version','description','name','rule_group','caseSensitive','matchOperator','matchType','matchValue','redirectURL'];
+  var fields = ['cloudlet_type','policy_name','version','description','name','rule_group','caseSensitive','matchType','negate','matchOperator','matchValue','redirectURL'];
     json2csv({ data: match_array, fields: fields }, function(err, csv) {
       if (err) console.log(err);
         fs.writeFile(export_dir + '/' + file_name +'.csv', csv, function(err) {
